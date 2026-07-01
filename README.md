@@ -124,4 +124,4 @@ Key production settings:
 
 ## 📄 License
 
-MIT License — feel free to use and adapt.
+feel free to use

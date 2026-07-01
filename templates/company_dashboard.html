@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% block title %}Employer Dashboard - Elevate Workforce Solutions{% endblock %}
+{% block content %}
+<div class="container my-5">
+    <!-- Header Block -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Employer Dashboard</h2>
+            <p class="text-muted small mb-0">Manage job postings, track applicant submissions, and update your business profile</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'job_create' %}" class="btn btn-primary btn-custom btn-custom-primary rounded-pill shadow-sm">
+                <i class="fa-solid fa-circle-plus me-2"></i> Post a New Job
+            </a>
+            <a href="{% url 'random_job' %}" class="btn btn-success btn-custom btn-custom-success rounded-pill shadow-sm btn-random-job">
+                <i class="fa-solid fa-dice me-2"></i> Generate Random Job
+            </a>
+        </div>
+    </div>
+
+    <!-- Analytics Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="stat-card blue">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="display-6 fw-bold mb-1">{{ total_jobs }}</h3>
+                        <span class="small opacity-80 fw-semibold">Total Job Listings</span>
+                    </div>
+                    <i class="fa-solid fa-list-check fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card emerald">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="display-6 fw-bold mb-1">{{ total_applications }}</h3>
+                        <span class="small opacity-80 fw-semibold">Total Applications Received</span>
+                    </div>
+                    <i class="fa-solid fa-users fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card indigo">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="display-6 fw-bold mb-1">{{ pending_applications }}</h3>
+                        <span class="small opacity-80 fw-semibold">Pending Review</span>
+                    </div>
+                    <i class="fa-solid fa-clock-rotate-left fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Job Postings List Column (Left) -->
+        <div class="col-lg-8">
+            <div class="card premium-card border-light p-4 shadow-sm bg-white h-100">
+                <h4 class="fw-bold mb-4 text-dark"><i class="fa-solid fa-briefcase text-primary me-2"></i> Active Job Postings</h4>
+                
+                {% if jobs %}
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr class="text-muted small border-bottom">
+                                    <th scope="col" class="pb-3" style="font-weight: 600;">Job details</th>
+                                    <th scope="col" class="pb-3 text-center" style="font-weight: 600;">Applicants</th>
+                                    <th scope="col" class="pb-3 text-center" style="font-weight: 600;">Status</th>
+                                    <th scope="col" class="pb-3 text-center" style="font-weight: 600;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for job in jobs %}
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold text-dark mb-0">{{ job.title }}</div>
+                                            <small class="text-muted-custom">Posted: {{ job.posted_date|date:"M d, Y" }} | Exp: {{ job.deadline|date:"M d, Y" }}</small>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-light text-primary border px-3 py-2 rounded-pill font-monospace fw-bold">
+                                                {{ job.applications.count }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            {% if job.is_active %}
+                                                <span class="badge bg-success-light text-success border-success-light px-2.5 py-1 rounded-pill small fw-bold">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary-light text-secondary px-2.5 py-1 rounded-pill small fw-bold">Draft</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="d-flex justify-content-center gap-2">
+                                                <a href="{% url 'view_applicants' job.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" title="View Applicants">
+                                                    <i class="fa-solid fa-users me-1"></i> View
+                                                </a>
+                                                <a href="{% url 'job_update' job.id %}" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5" title="Edit Job">
+                                                    <i class="fa-solid fa-pencil"></i> Edit
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-2.5" data-bs-toggle="modal" data-bs-target="#deleteModal{{ job.id }}" title="Delete Job">
+                                                    <i class="fa-solid fa-trash-can"></i> Delete
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Delete Confirmation Modals (outside the table to prevent flickering) -->
+                    {% for job in jobs %}
+                        <div class="modal fade" id="deleteModal{{ job.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content border-0 rounded-4 shadow-lg p-4">
+                                    <div class="modal-body text-center">
+                                        <i class="fa-solid fa-triangle-exclamation text-danger display-4 mb-3"></i>
+                                        <h4 class="fw-bold mb-2">Delete Job Listing?</h4>
+                                        <p class="text-muted small">Are you sure you want to permanently delete the job posting <strong class="text-dark">"{{ job.title }}"</strong>? This action cannot be undone and will delete all applicant submissions.</p>
+                                        <div class="d-flex gap-3 mt-4">
+                                            <button type="button" class="btn btn-outline-secondary w-50 rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                                            <form method="POST" action="{% url 'job_delete' job.id %}" class="w-50">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger w-100 rounded-pill">Delete Job</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5 my-auto">
+                        <i class="fa-regular fa-folder-open text-muted display-4 mb-3"></i>
+                        <h5 class="fw-bold text-dark">No Jobs Posted Yet</h5>
+                        <p class="text-muted small max-w-sm mx-auto mb-4">You haven't posted any job openings yet. Start hiring by adding your first job posting today!</p>
+                        <a href="{% url 'job_create' %}" class="btn btn-primary btn-sm rounded-pill px-4 py-2">Create Job Posting</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Company details column (Right) -->
+        <div class="col-lg-4">
+            <div class="card premium-card border-light p-4 shadow-sm bg-white h-100">
+                <div class="text-center mb-4 border-bottom pb-3">
+                    <div class="bg-primary-light text-primary d-inline-flex p-3 rounded-circle mb-2">
+                        <i class="fa-solid fa-building fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-1">{{ company.company_name }}</h5>
+                    <span class="badge bg-light text-success border border-success-light rounded-pill px-3 py-1 font-monospace text-xs fw-bold">Employer Admin</span>
+                </div>
+
+                <h5 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-building-circle-gear text-primary me-2"></i> Company Profile</h5>
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark small">Company Name</label>
+                        <input type="text" name="company_name" class="form-control form-control-custom form-control-sm" value="{{ form.company_name.value|default:'' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark small">Contact Email</label>
+                        <input type="email" name="contact_email" class="form-control form-control-custom form-control-sm" value="{{ form.contact_email.value|default:'' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark small">Location</label>
+                        <input type="text" name="location" class="form-control form-control-custom form-control-sm" value="{{ form.location.value|default:'' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark small">Website URL</label>
+                        <input type="url" name="website" class="form-control form-control-custom form-control-sm" value="{{ form.website.value|default:'' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark small">Company Description</label>
+                        <textarea name="description" class="form-control form-control-custom form-control-sm" rows="4" required>{{ form.description.value|default:'' }}</textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-dark small d-block">Company Logo</label>
+                        {% if company.logo %}
+                            <div class="d-flex align-items-center mb-2 p-2 bg-light border rounded-3">
+                                <img src="{{ company.logo.url }}" alt="logo" class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                <span class="small text-truncate flex-grow-1" style="max-width: 150px;">{{ company.logo.name }}</span>
+                            </div>
+                        {% endif %}
+                        <input type="file" name="logo" class="form-control form-control-custom form-control-sm">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-sm btn-custom-primary w-100 py-2.5 rounded-3 fw-bold shadow-sm">
+                        <i class="fa-solid fa-floppy-disk me-2"></i> Save Company Profile
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

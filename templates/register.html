@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% block title %}Register - Elevate Workforce Solutions{% endblock %}
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="card premium-card border-0 shadow-lg p-4 p-md-5 bg-white">
+                <div class="text-center mb-4">
+                    <div class="bg-primary-light d-inline-flex p-3 rounded-circle text-primary mb-3">
+                        <i class="fa-solid fa-user-plus fs-3"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">Create an Account</h3>
+                    <p class="text-muted small">Join Elevate Workforce Solutions as a Job Seeker or Employer</p>
+                </div>
+                
+                <form method="POST" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger rounded-3 shadow-sm mb-4">
+                            {% for error in form.non_field_errors %}
+                                <div class="small fw-semibold"><i class="fa-solid fa-circle-exclamation me-1"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Step 1: User Account Credentials -->
+                    <h5 class="fw-bold border-bottom pb-2 mb-4 text-primary"><i class="fa-solid fa-circle-user me-2"></i> Account Credentials</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-dark small">{{ form.username.label }}</label>
+                            <input type="text" name="username" class="form-control form-control-custom {% if form.username.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.username.value|default:'' }}" required>
+                            {% if form.username.errors %}
+                                <div class="invalid-feedback">{{ form.username.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text text-muted-custom" style="font-size: 0.75rem;">{{ form.username.help_text }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-dark small">{{ form.email.label }}</label>
+                            <input type="email" name="email" class="form-control form-control-custom {% if form.email.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.email.value|default:'' }}" required>
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback">{{ form.email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-dark small">{{ form.password1.label }}</label>
+                            <input type="password" name="password1" class="form-control form-control-custom {% if form.password1.errors %}is-invalid{% endif %}" required>
+                            {% if form.password1.errors %}
+                                <div class="invalid-feedback">{{ form.password1.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-dark small">{{ form.password2.label }}</label>
+                            <input type="password" name="password2" class="form-control form-control-custom {% if form.password2.errors %}is-invalid{% endif %}" required>
+                            {% if form.password2.errors %}
+                                <div class="invalid-feedback">{{ form.password2.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Role Selection -->
+                    <h5 class="fw-bold border-bottom pb-2 mb-4 text-primary"><i class="fa-solid fa-user-gear me-2"></i> Role & Contact details</h5>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark d-block mb-3">Registering as a:</label>
+                        <div class="d-flex gap-4">
+                            {% for radio in form.role %}
+                                <div class="form-check form-check-inline p-3 border rounded-3 w-100 position-relative" style="cursor: pointer; transition: all 0.2s;">
+                                    <label class="form-check-label fw-semibold text-dark d-flex align-items-center w-100" style="cursor: pointer;">
+                                        {{ radio.tag }}
+                                        <span class="ms-2">
+                                            {% if radio.choice_value == 'job_seeker' %}
+                                                <i class="fa-solid fa-user-tie text-primary me-2 fs-5"></i>
+                                            {% else %}
+                                                <i class="fa-solid fa-building-user text-success me-2 fs-5"></i>
+                                            {% endif %}
+                                            {{ radio.choice_label }}
+                                        </span>
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-dark small">{{ form.phone.label }}</label>
+                            <input type="text" name="phone" class="form-control form-control-custom" value="{{ form.phone.value|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-dark small">{{ form.bio.label }}</label>
+                            <textarea name="bio" class="form-control form-control-custom" rows="2">{{ form.bio.value|default:'' }}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Conditional Company Information -->
+                    <div id="company-fields-container" class="mt-4 p-4 border rounded-4 bg-light shadow-sm" style="display: none; transition: all 0.3s ease;">
+                        <h5 class="fw-bold border-bottom pb-2 mb-4 text-success"><i class="fa-solid fa-building me-2"></i> Company Profile Details</h5>
+                        <p class="text-muted small mb-4">These details will be used to create your public Employer profile page.</p>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-dark small">{{ form.company_name.label }} <span class="text-danger">*</span></label>
+                                <input type="text" name="company_name" id="id_company_name" class="form-control form-control-custom {% if form.company_name.errors %}is-invalid{% endif %}" 
+                                       value="{{ form.company_name.value|default:'' }}">
+                                {% if form.company_name.errors %}
+                                    <div class="invalid-feedback">{{ form.company_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-dark small">{{ form.company_email.label }} <span class="text-danger">*</span></label>
+                                <input type="email" name="company_email" id="id_company_email" class="form-control form-control-custom {% if form.company_email.errors %}is-invalid{% endif %}" 
+                                       value="{{ form.company_email.value|default:'' }}">
+                                {% if form.company_email.errors %}
+                                    <div class="invalid-feedback">{{ form.company_email.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-semibold text-dark small">{{ form.company_location.label }} <span class="text-danger">*</span></label>
+                                <input type="text" name="company_location" id="id_company_location" class="form-control form-control-custom {% if form.company_location.errors %}is-invalid{% endif %}" 
+                                       placeholder="e.g. Tinkune, Kathmandu" value="{{ form.company_location.value|default:'' }}">
+                                {% if form.company_location.errors %}
+                                    <div class="invalid-feedback">{{ form.company_location.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-semibold text-dark small">{{ form.company_description.label }}</label>
+                                <textarea name="company_description" id="id_company_description" class="form-control form-control-custom" rows="3" 
+                                          placeholder="Write a brief overview of your business activity...">{{ form.company_description.value|default:'' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-custom btn-custom-primary w-100 py-3 mt-5 shadow-sm">
+                        <i class="fa-solid fa-user-plus me-2"></i> Register Account
+                    </button>
+                </form>
+                
+                <div class="text-center mt-4">
+                    <p class="text-muted small mb-0">
+                        Already have an account? 
+                        <a href="{% url 'login' %}" class="text-primary fw-bold text-decoration-none ms-1">Log in here <i class="fa-solid fa-arrow-right-long text-xs ms-1"></i></a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const companyFields = document.getElementById("company-fields-container");
+        const roleRadios = document.querySelectorAll('input[name="role"]');
+        
+        function toggleCompanyFields() {
+            let selectedRole = '';
+            roleRadios.forEach(radio => {
+                if (radio.checked) {
+                    selectedRole = radio.value;
+                }
+                
+                // Style parent radio wrapper nicely based on active selection
+                const wrapper = radio.closest(".form-check");
+                if (radio.checked) {
+                    wrapper.style.borderColor = selectedRole === 'company_admin' ? '#10b981' : '#2563eb';
+                    wrapper.style.backgroundColor = selectedRole === 'company_admin' ? 'rgba(16, 185, 129, 0.05)' : 'rgba(37, 99, 235, 0.05)';
+                    wrapper.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.05)';
+                } else {
+                    wrapper.style.borderColor = '#e2e8f0';
+                    wrapper.style.backgroundColor = 'transparent';
+                    wrapper.style.boxShadow = 'none';
+                }
+            });
+            
+            if (selectedRole === 'company_admin') {
+                companyFields.style.display = "block";
+            } else {
+                companyFields.style.display = "none";
+            }
+        }
+
+        roleRadios.forEach(radio => {
+            radio.addEventListener("change", toggleCompanyFields);
+        });
+
+        // Trigger on load
+        toggleCompanyFields();
+    });
+</script>
+{% endblock %}

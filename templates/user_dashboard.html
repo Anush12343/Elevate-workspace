@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - Elevate Workforce Solutions{% endblock %}
+{% block content %}
+<div class="container my-5">
+    <div class="mb-4">
+        <h2 class="fw-bold text-dark mb-1">Candidate Dashboard</h2>
+        <p class="text-muted small">Manage your profile details and track your submitted job applications</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Profile Column (Left) -->
+        <div class="col-lg-4">
+            <div class="card premium-card border-light p-4 shadow-sm bg-white">
+                <div class="text-center mb-4 border-bottom pb-3">
+                    <div class="bg-primary-light text-primary d-inline-flex p-3 rounded-circle mb-2">
+                        <i class="fa-solid fa-user-tie fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-1">{{ user.first_name }} {{ user.last_name }}</h5>
+                    <span class="badge bg-light text-primary rounded-pill px-3 py-1 font-monospace text-xs fw-bold">{{ user.username }}</span>
+                </div>
+
+                <h5 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-user-pen text-primary me-2"></i> Update Profile</h5>
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark small">First Name</label>
+                        <input type="text" name="first_name" class="form-control form-control-custom form-control-sm" value="{{ form.first_name.value|default:'' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark small">Last Name</label>
+                        <input type="text" name="last_name" class="form-control form-control-custom form-control-sm" value="{{ form.last_name.value|default:'' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark small">Email Address</label>
+                        <input type="email" name="email" class="form-control form-control-custom form-control-sm" value="{{ form.email.value|default:'' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark small">Phone Number</label>
+                        <input type="text" name="phone" class="form-control form-control-custom form-control-sm" value="{{ form.phone.value|default:'' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark small">Short Bio</label>
+                        <textarea name="bio" class="form-control form-control-custom form-control-sm" rows="3" placeholder="Briefly describe your professional profile...">{{ form.bio.value|default:'' }}</textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-dark small d-block">Default CV / Resume</label>
+                        {% if user_resume %}
+                            <div class="d-flex align-items-center mb-2 p-2 bg-light border rounded-3">
+                                <i class="fa-solid fa-file-pdf text-danger fs-4 me-2"></i>
+                                <span class="small text-truncate flex-grow-1" style="max-width: 150px;">{{ user_resume.name }}</span>
+                                <a href="{{ user_resume.url }}" target="_blank" class="btn btn-sm btn-link p-0 text-primary fw-bold text-decoration-none small">
+                                    <i class="fa-solid fa-arrow-down"></i>
+                                </a>
+                            </div>
+                        {% endif %}
+                        <input type="file" name="resume" class="form-control form-control-custom form-control-sm">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-sm btn-custom-primary w-100 py-2.5 rounded-3 fw-bold shadow-sm">
+                        <i class="fa-solid fa-floppy-disk me-2"></i> Save Profile Details
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Application Timeline Column (Right) -->
+        <div class="col-lg-8">
+            <div class="card premium-card border-light p-4 shadow-sm bg-white">
+                <h4 class="fw-bold mb-4 text-dark"><i class="fa-solid fa-timeline text-primary me-2"></i> Your Job Applications</h4>
+                
+                {% if applications %}
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr class="text-muted small border-bottom">
+                                    <th scope="col" class="pb-3" style="font-weight: 600;">Job Title & Company</th>
+                                    <th scope="col" class="pb-3 text-center" style="font-weight: 600;">Applied Date</th>
+                                    <th scope="col" class="pb-3 text-center" style="font-weight: 600;">Status</th>
+                                    <th scope="col" class="pb-3 text-center" style="font-weight: 600;">Resume</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for app in applications %}
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold text-dark text-sm mb-0">
+                                                <a href="{% url 'job_detail' app.job.id %}" class="text-decoration-none text-dark hover-primary">{{ app.job.title }}</a>
+                                            </div>
+                                            <small class="text-primary fw-semibold">{{ app.job.company.company_name }}</small>
+                                        </td>
+                                        <td class="text-center small text-muted">
+                                            {{ app.applied_date|date:"M d, Y" }}
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge-custom badge-{{ app.status }}">
+                                                {% if app.status == 'pending' %}
+                                                    <i class="fa-solid fa-spinner fa-spin text-xs"></i>
+                                                {% elif app.status == 'reviewed' %}
+                                                    <i class="fa-solid fa-eye text-xs"></i>
+                                                {% elif app.status == 'accepted' %}
+                                                    <i class="fa-solid fa-circle-check text-xs"></i>
+                                                {% elif app.status == 'rejected' %}
+                                                    <i class="fa-solid fa-circle-xmark text-xs"></i>
+                                                {% endif %}
+                                                {{ app.status|title }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            {% if app.cv %}
+                                                <a href="{{ app.cv.url }}" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5">
+                                                    <i class="fa-solid fa-file-pdf"></i> CV
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted small">None</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fa-regular fa-folder-open text-muted display-4 mb-3"></i>
+                        <h5 class="fw-bold text-dark">No Applications Yet</h5>
+                        <p class="text-muted small max-w-sm mx-auto mb-4">You haven't submitted any job applications yet. Head over to our search engine and find your next career opportunity!</p>
+                        <a href="{% url 'job_list' %}" class="btn btn-primary btn-sm rounded-pill px-4 py-2">Find a Job Now</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

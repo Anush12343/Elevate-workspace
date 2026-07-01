@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% block title %}Home - Elevate Workforce Solutions{% endblock %}
+{% block content %}
+<!-- Premium Hero Banner -->
+<div class="hero-section text-center">
+    <div class="container px-4">
+        <h1 class="hero-title animate__animated animate__fadeInDown">Elevating Careers, Connecting Companies</h1>
+        <p class="hero-subtitle mx-auto animate__animated animate__fadeInUp">
+            Nepal's most trusted recruitment and employment portal. Connecting ambitious job seekers with the nation's leading employers.
+        </p>
+        <div class="mt-4 d-flex justify-content-center gap-3 flex-wrap">
+            <a href="{% url 'job_list' %}" class="btn btn-light text-primary btn-lg fw-bold px-4 py-3 rounded-pill shadow-sm">
+                <i class="fa-solid fa-magnifying-glass me-2"></i> Browse Jobs
+            </a>
+            {% if not user.is_authenticated %}
+                <a href="{% url 'register' %}" class="btn btn-outline-primary btn-lg fw-bold px-4 py-3 rounded-pill">
+                    <i class="fa-solid fa-user-plus me-2"></i> Join as Candidate
+                </a>
+            {% else %}
+                <a href="{% url 'dashboard_redirect' %}" class="btn btn-outline-primary btn-lg fw-bold px-4 py-3 rounded-pill">
+                    <i class="fa-solid fa-gauge-high me-2"></i> Go to Dashboard
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Search Overlay / Quick Actions -->
+    <div class="search-container shadow-sm border border-light">
+        <form method="GET" action="{% url 'job_list' %}">
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" name="q" class="form-control border-0" placeholder="Job Title, Skills, Keywords...">
+                    </div>
+                </div>
+                <div class="col-md-4 border-start-md">
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-0 text-muted"><i class="fa-solid fa-location-dot"></i></span>
+                        <input type="text" name="location" class="form-control border-0" placeholder="City or Region (e.g. Kathmandu)...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-bold">
+                        <i class="fa-solid fa-search me-2"></i> Find Jobs
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Quick Stats Section -->
+    <div class="row g-4 mt-5">
+        <div class="col-md-4">
+            <div class="stat-card blue text-center py-4">
+                <i class="fa-solid fa-briefcase fs-1 mb-2 text-info-light"></i>
+                <h3 class="display-6 fw-bold mb-0">{{ stats.jobs_count }}</h3>
+                <span class="small opacity-75">Active Job Postings</span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card emerald text-center py-4">
+                <i class="fa-solid fa-building fs-1 mb-2 text-info-light"></i>
+                <h3 class="display-6 fw-bold mb-0">{{ stats.companies_count }}</h3>
+                <span class="small opacity-75">Partner Companies</span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card indigo text-center py-4">
+                <i class="fa-solid fa-file-invoice fs-1 mb-2 text-info-light"></i>
+                <h3 class="display-6 fw-bold mb-0">{{ stats.applications_count }}</h3>
+                <span class="small opacity-75">Applications Processed</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured Jobs Section -->
+    <div class="mt-5 pt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">Featured Openings</h2>
+                <p class="text-muted small mb-0">Handpicked opportunities from our top-tier partners in Nepal</p>
+            </div>
+            <a href="{% url 'job_list' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                View All <i class="fa-solid fa-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="row g-4">
+            {% if featured_jobs %}
+                {% for job in featured_jobs %}
+                    <div class="col-md-4">
+                        <div class="card premium-card h-100 p-4 d-flex flex-column border-light shadow-sm">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <span class="badge bg-light text-primary rounded-pill px-3 py-1.5 font-monospace mb-2 d-inline-block small fw-bold">
+                                        {{ job.category }}
+                                    </span>
+                                    <h4 class="card-title fw-bold mb-1 text-truncate" style="max-width: 220px;">
+                                        <a href="{% url 'job_detail' job.id %}" class="text-decoration-none text-dark">{{ job.title }}</a>
+                                    </h4>
+                                    <h6 class="text-primary fw-semibold mb-0">{{ job.company.company_name }}</h6>
+                                </div>
+                            </div>
+                            <p class="text-muted small flex-grow-1 mb-3 line-clamp-3">
+                                {{ job.description|truncatewords:20 }}
+                            </p>
+                            <div class="d-flex align-items-center gap-2 mb-3 text-muted small">
+                                <span><i class="fa-solid fa-location-dot me-1 text-primary"></i> {{ job.location }}</span>
+                                <span>&bull;</span>
+                                <span><i class="fa-solid fa-clock me-1 text-success"></i> {{ job.job_type }}</span>
+                            </div>
+                            <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-dark fs-5">Rs. {{ job.salary|floatformat:0 }} <small class="text-muted text-xs">/mo</small></span>
+                                <a href="{% url 'job_detail' job.id %}" class="btn btn-primary btn-sm rounded-pill px-3">Details</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12 text-center py-5">
+                    <i class="fa-regular fa-folder-open text-muted display-4 mb-3"></i>
+                    <p class="text-muted">No jobs posted yet. Check back soon!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Why Choose Us -->
+    <div class="mt-5 pt-5 text-center">
+        <h2 class="fw-bold mb-4">Digitizing Nepal's Job Ecosystem</h2>
+        <div class="row g-4 mt-2">
+            <div class="col-md-4">
+                <div class="p-4 bg-white rounded-4 border shadow-sm">
+                    <div class="bg-primary-light d-inline-flex p-3 rounded-circle text-primary mb-3">
+                        <i class="fa-solid fa-shield-halved fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold">Verified Employers</h5>
+                    <p class="small text-muted mb-0">Every company registration is vetted by Elevate Workforce Solutions to prevent fake listings.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-4 bg-white rounded-4 border shadow-sm">
+                    <div class="bg-secondary-light d-inline-flex p-3 rounded-circle text-secondary mb-3">
+                        <i class="fa-solid fa-bolt fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold">Quick Apply</h5>
+                    <p class="small text-muted mb-0">Apply with your premade profile resume or upload a custom CV file in seconds.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-4 bg-white rounded-4 border shadow-sm">
+                    <div class="bg-primary-light d-inline-flex p-3 rounded-circle text-info mb-3">
+                        <i class="fa-solid fa-eye fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold">Transparent Tracking</h5>
+                    <p class="small text-muted mb-0">Track application status live—know exactly when your CV is reviewed, accepted, or rejected.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

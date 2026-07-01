@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% block title %}Applicants for {{ job.title }} - Elevate Workforce Solutions{% endblock %}
+{% block content %}
+<div class="container my-5">
+    <!-- Navigation back -->
+    <div class="mb-4">
+        <a href="{% url 'company_dashboard' %}" class="text-primary text-decoration-none fw-semibold">
+            <i class="fa-solid fa-arrow-left-long me-2"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Job Context Header -->
+    <div class="card premium-card border-light p-4 mb-4 shadow-sm bg-white">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <span class="badge bg-light text-primary rounded-pill px-3 py-1.5 font-monospace text-xs fw-bold mb-2 d-inline-block">{{ job.category }}</span>
+                <h3 class="fw-bold mb-1 text-dark">Applicants for: {{ job.title }}</h3>
+                <p class="text-muted small mb-0">Review CVs, read cover letters, and update candidate statuses for this posting</p>
+            </div>
+            <div class="text-md-end">
+                <span class="badge bg-light text-dark px-3 py-2 border rounded-pill font-monospace fw-bold">
+                    <i class="fa-solid fa-users me-1 text-primary"></i> Total: {{ applications.count }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Applicants Timeline / Table -->
+    <div class="card premium-card border-light p-4 shadow-sm bg-white">
+        {% if applications %}
+            <div class="d-flex flex-column gap-4">
+                {% for app in applications %}
+                    <div class="p-4 border rounded-4 bg-light shadow-xs position-relative" style="transition: all 0.2s ease;">
+                        <div class="row g-3 align-items-center">
+                            <!-- Candidate Identity -->
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="bg-primary-light text-primary p-2.5 rounded-circle me-3"><i class="fa-solid fa-user-check fs-5"></i></div>
+                                    <div>
+                                        <h5 class="fw-bold text-dark mb-0">{{ app.applicant.first_name }} {{ app.applicant.last_name }}</h5>
+                                        <small class="text-muted">@{{ app.applicant.username }}</small>
+                                    </div>
+                                </div>
+                                <div class="small text-muted-custom space-y-1">
+                                    <div><i class="fa-solid fa-envelope me-2 text-primary"></i> {{ app.applicant.email }}</div>
+                                    {% if app.applicant.profile.phone %}
+                                        <div><i class="fa-solid fa-phone me-2 text-primary"></i> {{ app.applicant.profile.phone }}</div>
+                                    {% endif %}
+                                    <div class="mt-2 text-dark font-monospace text-xs">Applied: {{ app.applied_date|date:"M d, Y, h:i A" }}</div>
+                                </div>
+                            </div>
+
+                            <!-- Candidate Cover Letter / Bio -->
+                            <div class="col-md-5">
+                                <div class="p-3 bg-white rounded-3 border">
+                                    <h6 class="fw-bold text-dark small mb-2"><i class="fa-solid fa-feather-pointed text-primary me-1"></i> Cover Letter & Bio</h6>
+                                    {% if app.cover_letter %}
+                                        <div class="text-secondary small line-clamp-3 mb-2" style="white-space: pre-line;">{{ app.cover_letter }}</div>
+                                    {% else %}
+                                        <div class="text-muted small italic mb-2">No cover letter submitted.</div>
+                                    {% endif %}
+                                    {% if app.applicant.profile.bio %}
+                                        <div class="border-top pt-2 mt-2">
+                                            <small class="text-muted d-block uppercase text-xxs font-weight-600">Candidate Bio:</small>
+                                            <span class="text-secondary small" style="white-space: pre-line;">{{ app.applicant.profile.bio }}</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Application Status Panel & Actions -->
+                            <div class="col-md-3 text-md-end">
+                                <div class="mb-3 d-flex align-items-center justify-content-md-end gap-2">
+                                    <span class="small text-muted-custom">Current Status:</span>
+                                    <span class="badge-custom badge-{{ app.status }}">
+                                        {{ app.status|title }}
+                                    </span>
+                                </div>
+                                
+                                <div class="d-flex flex-column gap-2">
+                                    <!-- CV Actions -->
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-sm btn-info text-white rounded-pill py-2 fw-bold shadow-xs w-50" data-bs-toggle="collapse" data-bs-target="#cvViewer-{{ app.id }}" aria-expanded="false" aria-controls="cvViewer-{{ app.id }}">
+                                            <i class="fa-solid fa-eye me-1"></i> View CV
+                                        </button>
+                                        <a href="{{ app.cv.url }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill py-2 fw-bold shadow-xs w-50">
+                                            <i class="fa-solid fa-file-arrow-down me-1"></i> Download
+                                        </a>
+                                    </div>
+                                    
+                                    <!-- Status Update Actions panel -->
+                                    <div class="border-top pt-2 mt-2">
+                                        <form method="POST" action="{% url 'update_application_status' app.id %}" class="d-flex gap-1 justify-content-md-end">
+                                            {% csrf_token %}
+                                            <button type="submit" name="status" value="reviewed" class="btn btn-xs btn-info rounded-pill px-2.5 text-white" title="Mark as Reviewed">
+                                                <i class="fa-solid fa-eye text-xs me-1"></i> Review
+                                            </button>
+                                            <button type="submit" name="status" value="accepted" class="btn btn-xs btn-success rounded-pill px-2.5" title="Accept Candidate">
+                                                <i class="fa-solid fa-check text-xs me-1"></i> Accept
+                                            </button>
+                                            <button type="submit" name="status" value="rejected" class="btn btn-xs btn-danger rounded-pill px-2.5" title="Reject Candidate">
+                                                <i class="fa-solid fa-xmark text-xs me-1"></i> Reject
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Collapsible CV Inline Viewer -->
+                        {% if app.cv %}
+                            <div class="collapse mt-3" id="cvViewer-{{ app.id }}">
+                                <div class="card card-body p-0 border rounded-4 overflow-hidden shadow-sm bg-white" style="height: 650px;">
+                                    <iframe src="{{ app.cv.url }}#toolbar=0" width="100%" height="100%" style="border: none;"></iframe>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fa-regular fa-folder-open text-muted display-4 mb-3"></i>
+                    <h5 class="fw-bold text-dark">No Applications Yet</h5>
+                    <p class="text-muted small max-w-sm mx-auto mb-0">No job seekers have applied for this listing yet. Elevate Workforce is promoting your posting to search engines and matched candidates.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
